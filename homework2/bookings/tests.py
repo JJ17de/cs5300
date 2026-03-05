@@ -1,6 +1,7 @@
 from django.test import TestCase
-from .models import Movie
+from .models import Movie, Seat
 from datetime import date
+
 
 
 class MovieModelTest(TestCase):
@@ -19,3 +20,19 @@ class MovieModelTest(TestCase):
 
     def test_movie_str(self):
         self.assertEqual(str(self.movie), "F1 The Movie")
+
+class SeatModelTest(TestCase):
+
+    def setUp(self):
+        self.seat = Seat.objects.create(seat_number="E5", booking_status=False)
+
+    def test_seat_creation(self):
+        self.assertEqual(self.seat.seat_number, "E5")
+        self.assertFalse(self.seat.booking_status)
+
+    def test_seat_str(self):
+        self.assertEqual(str(self.seat), "E5")
+
+    def test_seat_default_status(self):
+        seat = Seat.objects.create(seat_number="F6")
+        self.assertFalse(seat.booking_status)
