@@ -1,7 +1,7 @@
 from django.test import TestCase
-from .models import Movie, Seat
+from .models import Movie, Seat, Booking
+from django.contrib.auth.models import User
 from datetime import date
-
 
 
 class MovieModelTest(TestCase):
@@ -9,7 +9,7 @@ class MovieModelTest(TestCase):
     def setUp(self):
         self.movie = Movie.objects.create(
             title="F1 The Movie",
-            description="one of the greatest movies of all time",
+            description="One of the greatest movies of all time",
             release_date=date(2025, 6, 27),
             duration=155
         )
@@ -36,3 +36,32 @@ class SeatModelTest(TestCase):
     def test_seat_default_status(self):
         seat = Seat.objects.create(seat_number="F6")
         self.assertFalse(seat.booking_status)
+
+class BookingModelTest(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.movie = Movie.objects.create(
+            title="Bad Boys",
+            description="Again, one of the greatest movies of all time",
+            release_date=date(1995, 4, 7),
+            duration=119
+        )
+        self.seat = Seat.objects.create(seat_number="D4", booking_status=False)
+        self.booking = Booking.objects.create(
+            movie=self.movie,
+            seat=self.seat,
+            user=self.user
+        )
+
+    def test_booking_creation(self):
+        self.assertEqual(self.booking.movie, self.movie)
+        self.assertEqual(self.booking.seat, self.seat)
+        self.assertEqual(self.booking.user, self.user)
+
+    def test_booking_str(self):
+        self.assertIn("testuser", str(self.booking))
+        self.assertIn("Bad Boys", str(self.booking))
+
+    def test_booking_date_auto(self):
+        self.assertIsNotNone(self.booking.booking_date)
