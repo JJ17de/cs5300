@@ -83,3 +83,14 @@ class MovieViewSetTest(APITestCase):
         response = self.client.get('/api/movies/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
+
+    def test_create_movie(self):
+        data = {
+            "title": "2 Fast 2 Furious",
+            "description": "The best movie in the fast and furious franchise",
+            "release_date": "2003-06-06",
+            "duration": 107
+        }
+        response = self.client.post('/api/movies/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Movie.objects.count(), 2)
