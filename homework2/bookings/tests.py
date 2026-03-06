@@ -117,3 +117,12 @@ class MovieViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Movie.objects.count(), 0)
 
+class SeatViewSetTest(APITestCase):
+
+    def setUp(self):
+        self.seat = Seat.objects.create(seat_number="E5", booking_status=False)
+
+    def test_list_seats(self):
+        response = self.client.get('/api/seats/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
