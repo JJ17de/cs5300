@@ -150,3 +150,41 @@ class SeatViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Seat.objects.count(), 0)
 
+class BookingViewSetTest(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.movie = Movie.objects.create(
+            title="Top Gun Maverick",
+            description="The best sequel ever made",
+            release_date="2022-05-27",
+            duration=131
+        )
+        self.seat = Seat.objects.create(seat_number="C3", booking_status=False)
+
+    def test_create_booking(self):
+        data = {
+            "movie": self.movie.id,
+            "seat": self.seat.id,
+            "user": self.user.id
+        }
+        response = self.client.post('/api/bookings/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Booking.objects.count(), 1)
+
+    def test_list_bookings(self):
+        Booking.objects.create(movie=self.movie, seat=self.seat, user=self.user)
+        response = self.client.get('/api/bookings/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_retrieve_booking(self):
+        booking = Booking.objects.create(movie=self.movie, seat=self.seat, user=self.user)
+        response = self.client.get(f'/api/bookings/{booking.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_delete_booking(self):
+        booking = Booking.objects.create(movie=self.movie, seat=self.seat, user=self.user)
+        response = self.client.delete(f'/api/bookings/{booking.id}/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Booking.objects.count(), 0)
