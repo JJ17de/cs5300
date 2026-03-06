@@ -132,3 +132,8 @@ class SeatViewSetTest(APITestCase):
         response = self.client.post('/api/seats/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Seat.objects.count(), 2)
+        
+    def test_retrieve_seat(self):
+        response = self.client.get(f'/api/seats/{self.seat.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['seat_number'], "E5")
