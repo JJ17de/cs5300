@@ -94,3 +94,20 @@ class MovieViewSetTest(APITestCase):
         response = self.client.post('/api/movies/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Movie.objects.count(), 2)
+
+    def test_retrieve_movie(self):
+        response = self.client.get(f'/api/movies/{self.movie.id}/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['title'], "The Equalizer")
+
+    def test_update_movie(self):
+        data = {
+            "title": "The Equalizer",
+            "description": "updated description",
+            "release_date": "2014-09-26",
+            "duration": 140
+        }
+        response = self.client.put(f'/api/movies/{self.movie.id}/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.movie.refresh_from_db()
+        self.assertEqual(self.movie.duration, 140)
