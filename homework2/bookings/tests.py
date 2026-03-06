@@ -4,7 +4,8 @@ from django.contrib.auth.models import User
 from datetime import date
 from rest_framework.test import APITestCase
 from rest_framework import status
-
+from django.test import Client
+from django.urls import reverse
 
 class MovieModelTest(TestCase):
 
@@ -188,3 +189,94 @@ class BookingViewSetTest(APITestCase):
         response = self.client.delete(f'/api/bookings/{booking.id}/')
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Booking.objects.count(), 0)
+
+class MovieListViewTest(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.movie = Movie.objects.create(
+            title="John Wick",
+            description="A retired hitman seeks vengeance",
+            release_date=date(2014, 10, 24),
+            duration=101
+        )
+
+    def test_movie_list_page(self):
+        response = self.client.get(reverse('movie_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bookings/movie_list.html')
+        self.assertContains(response, "John Wick")
+
+    def test_movie_list_empty(self):
+        Movie.objects.all().delete()
+        response = self.client.get(reverse('movie_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No movies available")
+
+
+class SeatBookingViewTest(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.movie = Movie.objects.create(
+            title="John Wick",
+            description="A retired hitman seeks vengeance",
+            release_date=date(2014, 10, 24),
+            duration=101
+        )
+        self.seat = Seat.objects.create(seat_number="G7", booking_status=False)
+
+    def test_seat_booking_page(self):
+        response = self.client.get(reverse('book_seat', args=[self.movie.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bookings/seat_booking.html')
+
+    def test_book_seat_post(self):
+        response = self.client.post(
+            reverse('book_seat', args=[self.movie.id]),
+            {'seat_id': self.seat.id}
+        )
+        self.assertEqual(response.status_code, 302)
+        self.seat.refresh_from_db()
+        self.assertTrue(self.seat.booking_status)
+
+    def test_book_already_booked_seat(self):
+        self.seat.booking_status = True
+        self.seat.save()
+        response = self.client.post(
+            reverse('book_seat', args=[self.movie.id]),
+            {'seat_id': self.seat.id}
+        )
+        self.assertEqual(response.status_code, 302)
+
+
+class BookingHistoryViewTest(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.movie = Movie.objects.create(
+            title="John Wick",
+            description="The movie in the franchise",
+            release_date=date(2014, 10, 24),
+            duration=101
+        )
+        self.seat = Seat.objects.create(seat_number="H8", booking_status=True)
+        self.booking = Booking.objects.create(
+            movie=self.movie,
+            seat=self.seat,
+            user=self.user
+        )
+
+    def test_booking_history_page(self):
+        response = self.client.get(reverse('booking_history'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'bookings/booking_history.html')
+        self.assertContains(response, "John Wick")
+
+    def test_booking_history_empty(self):
+        Booking.objects.all().delete()
+        response = self.client.get(reverse('booking_history'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No bookings yet")
