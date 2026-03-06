@@ -105,9 +105,15 @@ class MovieViewSetTest(APITestCase):
             "title": "The Equalizer",
             "description": "updated description",
             "release_date": "2014-09-26",
-            "duration": 140
+            "duration": 132
         }
         response = self.client.put(f'/api/movies/{self.movie.id}/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.movie.refresh_from_db()
-        self.assertEqual(self.movie.duration, 140)
+        self.assertEqual(self.movie.duration, 132)
+
+    def test_delete_movie(self):
+        response = self.client.delete(f'/api/movies/{self.movie.id}/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Movie.objects.count(), 0)
+
