@@ -2,6 +2,8 @@ from django.test import TestCase
 from .models import Movie, Seat, Booking
 from django.contrib.auth.models import User
 from datetime import date
+from rest_framework.test import APITestCase
+from rest_framework import status
 
 
 class MovieModelTest(TestCase):
@@ -65,3 +67,19 @@ class BookingModelTest(TestCase):
 
     def test_booking_date_auto(self):
         self.assertIsNotNone(self.booking.booking_date)
+
+
+class MovieViewSetTest(APITestCase):
+
+    def setUp(self):
+        self.movie = Movie.objects.create(
+            title="The Equalizer",
+            description="Again, another one of the greatest movies of all time, trust me bro",
+            release_date="2014-09-26",
+            duration=132
+        )
+
+    def test_list_movies(self):
+        response = self.client.get('/api/movies/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
