@@ -132,8 +132,21 @@ class SeatViewSetTest(APITestCase):
         response = self.client.post('/api/seats/', data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Seat.objects.count(), 2)
-        
+
     def test_retrieve_seat(self):
         response = self.client.get(f'/api/seats/{self.seat.id}/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['seat_number'], "E5")
+
+    def test_update_seat_status(self):
+        data = {"seat_number": "E5", "booking_status": True}
+        response = self.client.put(f'/api/seats/{self.seat.id}/', data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.seat.refresh_from_db()
+        self.assertTrue(self.seat.booking_status)
+
+    def test_delete_seat(self):
+        response = self.client.delete(f'/api/seats/{self.seat.id}/')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Seat.objects.count(), 0)
+
